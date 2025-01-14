@@ -1,10 +1,9 @@
 package com.example.fibonacci;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class FibonacciCalculator {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         // Define the number of threads in the thread pool
         int numThreads = 5;
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
@@ -14,7 +13,9 @@ public class FibonacciCalculator {
 
         // Submit tasks to compute Fibonacci numbers concurrently
         for (int number : numbers) {
-            executorService.submit(new FibonacciTask(number));
+            Future<Long> future = executorService.submit(new FibonacciTask(number));
+            System.out.printf("Fibonacci of %d is %d (computed by %s)%n",
+                    number, future.get(), Thread.currentThread().getName());
         }
 
         // Shut down the executor service
@@ -22,8 +23,8 @@ public class FibonacciCalculator {
     }
 }
 
-// Define a Runnable task to compute Fibonacci
-class FibonacciTask implements Runnable {
+// Define a Callable task to compute Fibonacci
+class FibonacciTask implements Callable<Long> {
     private final int number;
 
     public FibonacciTask(int number) {
@@ -31,10 +32,8 @@ class FibonacciTask implements Runnable {
     }
 
     @Override
-    public void run() {
-        long result = computeFibonacci(number);
-        System.out.printf("Fibonacci of %d is %d (computed by %s)%n",
-                number, result, Thread.currentThread().getName());
+    public Long call() {
+        return computeFibonacci(number);
     }
 
     // Recursive method to compute Fibonacci
